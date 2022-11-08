@@ -24,13 +24,13 @@ function cakesRestock(qty = 1){
     }
 }
 
-// const firstState = {
-//     numberOfCakes: 15,
-//     anotherProperties: {}
-// }
+const initialState = {
+    numberOfCakes: 15,
+    anotherProperties: {}
+}
 
 
-const reducer = (state = {numberOfCakes:12}, action) => {
+const reducer = (state = initialState, action) => {
     switch(action.type){
         case CAKE_ORDERED:
             return {
