@@ -1,80 +1,88 @@
-const redux = require("redux")
+const redux =require('redux')
 const createStore = redux.createStore
 const applyMiddleware = redux.applyMiddleware
 
-const thunkMiddleware = require('redux-thunk').default
+const thunk = require('redux-thunk').default
 const axios = require('axios')
+const reduxLogger = require("redux-logger")
+const logger = reduxLogger.createLogger()
 
+
+
+const FETCH_USER_REQUESTED = 'FETCH_USER_REQUESTED'
+const FETCH_USER_SUCCESS = 'FETCH_USER_SUCCESS'
+const FETCH_USER_FAILED = 'FETCH_USER_FAILED'
 
 const initialState = {
-    loading:false,
-    users: [],
+    loading: false,
+    users:[],
     error:''
 }
 
-const FETCH_USERS_REQUESTED = 'FETCH_USERS_REQUESTED'
-const FETCH_USERS_SUCCEEDED = 'FETCH_USERS_SUCCEEDED'
-const FETCH_USERS_FAILED = 'FETCH_USERS_FAILED'
-
-const fetchUsersRequested = () => {
+function fetchUserRequested() {
     return {
-        type: FETCH_USERS_REQUESTED,
+        type:FETCH_USER_REQUESTED
     }
 }
 
-const fetchUsersSuccess = (users) => {
+function fetchUserSuccess(users) {
     return {
-        type:FETCH_USERS_SUCCEEDED,
+        type: FETCH_USER_SUCCESS,
         payload:users
     }
 }
 
-const fetchUserFailed = (error) => {
+function fetchUserFailed(error) {
     return {
-        type:FETCH_USERS_FAILED,
+        type: FETCH_USER_FAILED,
         payload:error
     }
 }
 
-const reducer = (state = initialState, action) => {
+function reducer(state = initialState, action) {
     switch(action.type){
-        case FETCH_USERS_REQUESTED:
+        case FETCH_USER_REQUESTED:
             return {
                 ...state,
                 loading:true
             }
-        case FETCH_USERS_SUCCEEDED:
+        case FETCH_USER_SUCCESS:
             return {
                 loading:false,
-                users:action.payload,
+                users: action.payload,
                 error:''
             }
-        case FETCH_USERS_FAILED:
+        case FETCH_USER_FAILED:
             return {
                 loading:false,
                 users:[],
-                error:action.payload
+                error: action.payload
             }
+        default:
+            return state
     }
-
 }
 
-const fetchUsers = () => {
+function fetchUser(){
+
     return function (dispatch) {
-        dispatch(fetchUsersRequested())
-        axios.get('https://jsonplaceholder.typicode.com/users').then((response) =>{
-            const users = response.data.map((user) => user.name)
-            dispatch(fetchUsersSuccess(users))
-        }).catch((error) => {
-            dispatch(fetchUserFailed(error.message))
-        })
+        dispatch(fetchUserRequested())
+        axios.get('https://jsonplaceholder.typicode.com/users')
+        .then((resp) => {
+            const users = resp.data.map((user) => user.name)
+            dispatch(fetchUserSuccess(users))
 
+        })
+        .catch((error)=>{
+            dispatch(fetchUserFailed(error.message))
+
+        })
     }
+
 }
 
-const store = createStore(reducer, applyMiddleware(thunkMiddleware));
+const store = createStore(reducer, applyMiddleware(thunk, logger))
+store.subscribe(()=>{ })
 
-store.subscribe(()=>{console.log(store.getState())});
-
-store.dispatch(fetchUsers())
+store.dispatch(fetchUser())
 
